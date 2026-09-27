@@ -1,0 +1,11 @@
+node_modules/
+.output/
+.nitro/
+dist/
+.env
+.env.*
+test-results/
+.local/
+.impeccable/
+evals/results/
+*.log

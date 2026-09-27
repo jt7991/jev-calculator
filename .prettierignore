@@ -1,0 +1,8 @@
+node_modules
+.output
+.nitro
+.agents
+.impeccable/review
+package-lock.json
+evals/results
+test-results

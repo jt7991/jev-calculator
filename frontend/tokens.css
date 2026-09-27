@@ -1,0 +1,11 @@
+:root {
+  color-scheme: dark;
+  --paper: #171a18;
+  --white: #242925;
+  --ink: #edf0e9;
+  --green: #b6cfa5;
+  --muted: #a6aea2;
+  --line: #3b433c;
+  --hover: #303830;
+  --sans: 'Manrope Variable', sans-serif;
+}

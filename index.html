@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171a18" />
+    <meta
+      name="description"
+      content="Units, timestamps, and date arithmetic. A natural-language calculator powered by Jev."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Calculator</title>
+  </head>
+  <body>
+    <div
+      id="startup"
+      role="status"
+      style="
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        gap: 16px;
+        padding: 24px;
+        background: #171a18;
+        color: #edf0e9;
+        font: 16px system-ui;
+        text-align: center;
+      "
+    >
+      <span id="startup-message">Loading calculator…</span>
+      <a id="reload-app" href="/?reload=1" style="color: #b6cfa5; padding: 12px"
+        >Reload calculator</a
+      >
+      <noscript>Enable JavaScript to use the calculator.</noscript>
+    </div>
+    <script>
+      document.getElementById('reload-app').href = '/?reload=' + Date.now();
+      window.setTimeout(function () {
+        var message = document.getElementById('startup-message');
+        if (message)
+          message.textContent = 'Calculator could not start. Try reloading.';
+      }, 10000);
+    </script>
+    <div id="app"></div>
+    <script type="module" src="/frontend/main.ts"></script>
+  </body>
+</html>
