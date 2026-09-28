@@ -288,6 +288,25 @@ test('drills from calculation steps into actual selections and option probabilit
   await expect(state).toContainText('next tuesday');
   await expect(state).toContainText('3 months after');
   await expect(steps.locator('.all-calls')).toContainText('All Jev calls');
+  await phrase.click();
+  const allCalls = steps.locator('.all-calls');
+  await allCalls.locator(':scope > summary').click();
+  const groupedRequest = allCalls
+    .locator('.call')
+    .filter({
+      has: page.locator('.request-meta').filter({ hasText: '2 questions' }),
+    })
+    .first();
+  await groupedRequest.locator(':scope > summary').click();
+  await expect(groupedRequest.locator('.request-question')).toHaveCount(2);
+  const question = groupedRequest.locator('.request-question').first();
+  await question.locator(':scope > summary').click();
+  await expect(question.locator('.question-prompt')).toBeVisible();
+  await question.getByText('Options sent', { exact: true }).click();
+  await question
+    .getByText('Answer and confidence scores', { exact: true })
+    .click();
+  await expect(question).toContainText('probabilities');
   await page.screenshot({
     path: '.impeccable/review/work-desktop.png',
     fullPage: true,

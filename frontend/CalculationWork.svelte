@@ -75,17 +75,23 @@
     {#if work.calls?.length}
       <details class="all-calls">
         <summary
-          >All Jev calls <span>{work.calls.length} requests</span></summary
+          >All Jev calls <span
+            >{work.calls.length}
+            {work.calls.length === 1 ? 'request' : 'requests'}</span
+          ></summary
         >
         <p>In start order; independent calls can run concurrently.</p>
         {#each work.calls as call (call.id)}
           <details class="call">
             <summary
-              >Call {call.id} · {Object.keys(call.request.questions).join(
-                ', ',
-              )}</summary
+              ><span>Request {call.id}</span><span class="request-meta"
+                >{Object.keys(call.request.questions).length}
+                {Object.keys(call.request.questions).length === 1
+                  ? 'question'
+                  : 'questions'} · {call.milliseconds ?? '—'} ms</span
+              ></summary
             >
-            <JevCallDetails {call} />
+            <JevCallDetails {call} showQuestions />
           </details>
         {/each}
       </details>
@@ -272,8 +278,18 @@
     border-bottom: 1px solid var(--line);
   }
   .call > summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
     padding: 14px 0;
     overflow-wrap: anywhere;
+  }
+  .request-meta {
+    color: var(--muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
   }
   .context > span:last-child {
     text-align: right;

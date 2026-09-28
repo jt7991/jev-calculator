@@ -1,7 +1,14 @@
 <script lang="ts">
   import type { JevCall } from '../core/trace';
-  let { call }: { call: JevCall } = $props();
+  let {
+    call,
+    showQuestions = false,
+  }: { call: JevCall; showQuestions?: boolean } = $props();
   let state = $derived(call.request.state);
+  function answer(name: string) {
+    if (!call.answers || typeof call.answers !== 'object') return undefined;
+    return (call.answers as Record<string, unknown>)[name];
+  }
   function json(value: unknown) {
     return JSON.stringify(value, null, 2);
   }
@@ -19,6 +26,35 @@
     {/each}
   {:else}
     <pre>{json(state)}</pre>
+  {/if}
+  {#if showQuestions}
+    <h4>Questions in this request</h4>
+    {#each Object.keys(call.request.questions) as name}
+      {@const question = call.request.questions[name]}
+      <details class="request-question">
+        <summary>{name}</summary>
+        <div class="question-body">
+          <h4>Prompt</h4>
+          {#if typeof question.instructions === 'string'}
+            <p class="question-prompt">{question.instructions}</p>
+          {:else}
+            <pre>{json(question.instructions)}</pre>
+          {/if}
+          <details>
+            <summary>Options sent</summary>
+            <pre>{json(question.criteria)}</pre>
+          </details>
+          <details>
+            <summary>Answer and confidence scores</summary>
+            {#if answer(name) !== undefined}
+              <pre>{json(answer(name))}</pre>
+            {:else}
+              <p>No answer recorded.</p>
+            {/if}
+          </details>
+        </div>
+      </details>
+    {/each}
   {/if}
   <details class="payload">
     <summary>Full request · all questions and options</summary>
@@ -76,5 +112,14 @@
   }
   .payload {
     margin-top: 10px;
+  }
+  .question-body {
+    margin-left: 12px;
+    padding-bottom: 12px;
+  }
+  .question-prompt {
+    margin: 8px 0 16px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
   }
 </style>
