@@ -8,6 +8,7 @@
   let input = $state('');
   let original = $state('');
   let comparisonRequest = $state('');
+  let compareLuna = $state(false);
   let result = $state<CalculationResult | null>(null);
   let busy = $state(false);
   let responseMs = $state<number | null>(null);
@@ -31,6 +32,8 @@
   ];
 
   onMount(() => {
+    compareLuna =
+      new URLSearchParams(window.location.search).get('compare') === 'luna';
     try {
       const stored = JSON.parse(localStorage.getItem('jev-recent') || '[]');
       if (Array.isArray(stored))
@@ -74,7 +77,7 @@
         timezone,
         referenceTime: new Date().toISOString(),
       });
-      comparisonRequest = body;
+      comparisonRequest = compareLuna ? body : '';
       let response = await fetch('/api/calculate', {
         method: 'QUERY',
         headers: { 'Content-Type': 'application/json' },

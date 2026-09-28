@@ -96,3 +96,5 @@ npm run test:browser         # requires a running server; set PLAYWRIGHT_BASE_UR
 ```
 
 Live evals require the configured key and save reports under `evals/results`. Old tests for the replaced parser are archived in `.local/legacy-tests`; the active suite tests the new expression evaluator, request contract, date rules, and choice acceptance.
+
+Luna comparison is opt-in at `/?compare=luna`. The default page shows only Jev and makes no Luna requests.

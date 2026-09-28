@@ -59,3 +59,5 @@ The input submits on Enter, permits Shift+Enter, and focuses with /. It has no m
 Keep the input dominant. Preserve the centered layout and honest empty state. Use concise functional copy. Respect reduced motion. Do not restore the wordmark, hero heading, or slogans. Do not introduce fake results, success metrics, or extra navigation.
 
 The web input is single-shot. Missing or ambiguous values produce an actionable inline error, not follow-up buttons. The original text stays editable after both success and error.
+
+Luna comparison is opt-in at `/?compare=luna`. The default page shows only Jev and makes no Luna requests.

@@ -186,7 +186,7 @@ test('real calculation renders the answer, response time, and cost', async ({
   page,
 }) => {
   await page.unroute('**/api/luna');
-  await page.goto('/');
+  await page.goto('/?compare=luna');
   await page
     .getByRole('textbox', { name: 'What would you like to calculate?' })
     .fill('1 cup in ml');
@@ -304,18 +304,72 @@ test('drills from calculation steps into actual selections and option probabilit
   });
 });
 
-test('displays server timings instead of delayed browser round trips', async ({ page }) => {
-  await page.route('**/api/calculate', async route => {
-    await new Promise(resolve => setTimeout(resolve, 350));
-    await route.fulfill({ json: { status: 'error', code: 'ambiguous', message: 'Test error', serverMs: 12 } });
+test('displays server timings instead of delayed browser round trips', async ({
+  page,
+}) => {
+  await page.route('**/api/calculate', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    await route.fulfill({
+      json: {
+        status: 'error',
+        code: 'ambiguous',
+        message: 'Test error',
+        serverMs: 12,
+      },
+    });
   });
-  await page.route('**/api/luna', async route => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    await route.fulfill({ json: { status: 'success', answer: 'Test answer', estimatedCostUsd: 0.0001, serverMs: 34 } });
+  await page.route('**/api/luna', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.fulfill({
+      json: {
+        status: 'success',
+        answer: 'Test answer',
+        estimatedCostUsd: 0.0001,
+        serverMs: 34,
+      },
+    });
   });
-  await page.goto('/');
+  await page.goto('/?compare=luna');
   await page.getByRole('textbox').fill('1 cup in ml');
   await page.keyboard.press('Enter');
-  await expect(page.getByLabel('Response time and estimated cost', { exact: true })).toContainText('12 ms');
-  await expect(page.getByLabel('Luna response time and estimated cost', { exact: true })).toContainText('34 ms');
+  await expect(
+    page.getByLabel('Response time and estimated cost', { exact: true }),
+  ).toContainText('12 ms');
+  await expect(
+    page.getByLabel('Luna response time and estimated cost', { exact: true }),
+  ).toContainText('34 ms');
+});
+
+test('Luna is opt-in and sends no requests on the normal page', async ({
+  page,
+}) => {
+  let lunaCalls = 0;
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/luna') lunaCalls++;
+  });
+  await page.route('**/api/calculate', (route) =>
+    route.fulfill({
+      json: {
+        status: 'success',
+        value: '3600',
+        unit: 'seconds',
+        interpretation: '1 hour in seconds',
+        details: [],
+        timezone: 'UTC',
+        referenceTime: '2026-09-28T12:00:00Z',
+        serverMs: 100,
+      },
+    }),
+  );
+  for (const url of ['/', '/?compare=false']) {
+    await page.goto(url);
+    await page.getByRole('textbox').fill('1 hour in seconds');
+    await page.keyboard.press('Enter');
+    await expect(page.getByLabel('Calculation result')).toContainText('3600');
+    await expect(page.getByLabel('Luna result', { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(page.locator('.comparison-grid')).toHaveCount(0);
+    expect(lunaCalls).toBe(0);
+  }
 });
