@@ -6,7 +6,7 @@ import { Engine, type StartingInput } from './engine.js';
 import { DateInput, type DateContext } from './date-input.js';
 import { Jev } from './jev.js';
 import { QuantityParser } from './quantity.js';
-import { OperationParser } from './operations.js';
+import { OperationParser, type Operation } from './operations.js';
 import { ExpressionEvaluator, type Expression } from './expression.js';
 import { wordSections } from './phrases.js';
 import { WorkBuilder, displayValue } from './work.js';
@@ -167,18 +167,25 @@ export class Calculator {
 
   private async parseOperations(text: string, input: StartingInput) {
     const phrases: string[] = [];
+    const resolved = new Map<string, Operation>();
     const phraseSelections = new Map<string, Selection[]>();
     for (let step = 0; step < 12; step++) {
       const next = await this.engine.nextSection(text, input, phrases);
       if (next.section === null) break;
       phrases.push(next.section);
+      if (next.operation) resolved.set(next.section, next.operation);
       phraseSelections.set(next.section, next.selections ?? []);
       if (step === 11) throw new Error('Use at most 12 operations.');
     }
     // Each phrase can be interpreted independently of its execution position.
     const [ordered, parsed] = await Promise.all([
       this.operations.executionOrder(phrases, text),
-      Promise.all(phrases.map((phrase) => this.operations.parse(phrase, text))),
+      Promise.all(
+        phrases.map(
+          (phrase) =>
+            resolved.get(phrase) ?? this.operations.parse(phrase, text),
+        ),
+      ),
     ]);
     return ordered.map((phrase) => ({
       ...parsed[phrases.indexOf(phrase)],

@@ -1,3 +1,6 @@
+import { Jev } from './jev.js';
+import { QuantityParser } from './quantity.js';
+import { OperationParser, type Operation } from './operations.js';
 import type { JevClient } from './trace.js';
 import {
   attachQuestionPrompts,
@@ -34,6 +37,7 @@ const operationCounts = { '0': 0, '1': 1, '2+': '2+' } as const;
 export type NextSection = {
   selections?: Selection[];
   section: string | null;
+  operation?: Operation;
   remaining: 0 | 1 | '2+' | null;
 };
 
@@ -168,7 +172,7 @@ export class Engine {
     const candidates: Record<string, string> = {};
     for (const section of Object.keys(sections)) {
       candidates[section] =
-        'Exactly one operation: a conversion (including to date) or an adjustment amount with its own or a shared relationship. Excludes the starting input and other amounts.';
+        'Exactly one conversion target OR exactly one amount-and-unit pair with its relationship words. A phrase containing two amount-and-unit pairs is never one operation, even when joined by and. Exclude the starting input.';
     }
     const response = await this.ask({
       model: process.env.TYPESAFE_MODEL || 'jev-1.13.0',
@@ -182,7 +186,7 @@ export class Engine {
         section: {
           type: 'choice',
           instructions:
-            'What phrase represents the next operation? An operation could be a conversion (in ml, in ms, or to date), addition (3 days after or 3 meters more than), or subtraction (15 years ago or 2 hours before). Select the leftmost phrase containing exactly one conversion, addition, or subtraction. Include that operation\'s amount, unit, and relationship words. Stop before the next operation begins. Amounts joined by and can share a relationship: for 3 years and 3 days from now, select 3 years first, then 3 days from (now is the input). For 2 hours and 30 minutes ago, select 2 hours first, then 30 minutes ago. Each amount is its own operation even if its relationship word appears only after the last amount. Exclude the joining word and from selected phrases. A leftover and alone is not an operation; select done. For "2 hours after 1 hour ago", select "2 hours after". Exclude the starting input in input and operations in completedSections. Select the leftmost remaining operation in the original request. This is text extraction, not execution ordering or calculation. Displaying a Unix timestamp as a date is a conversion: when remainingText is to date, select to date, not done. Select done when no operations remain.' +
+            'Which operation phrase appears first in remainingText, reading left to right? Select by text position only, regardless of which operation must execute first. An operation could be a conversion (in ml, in ms, or to date), addition (3 days after or 3 meters more than), or subtraction (15 years ago or 2 hours before). Select the leftmost phrase containing exactly one conversion, addition, or subtraction. Include that operation\'s amount, unit, and relationship words. Keep leading action words and trailing relationship words together: Add 3 days to today has input today and operation Add 3 days to, not 3 days. Stop before the next amount-and-unit pair or conversion begins. Each amount-and-unit pair is exactly ONE operation, even when several pairs share a trailing relationship. Never select a coordinated list containing two amounts as one section. For 1 month and 2 days before next Tuesday, select 1 month first, then 2 days before. Amounts joined by and can share a relationship: for 3 years and 3 days from now, select 3 years first, then 3 days from (now is the input). For 2 hours and 30 minutes ago, select 2 hours first, then 30 minutes ago. Each amount is its own operation even if its relationship word appears only after the last amount. Exclude the joining word and from selected phrases. A leftover and alone is not an operation; select done. For "2 hours after 1 hour ago", select "2 hours after". Exclude the starting input in input and operations in completedSections. Select the leftmost remaining operation in the original request. This is text extraction, not execution ordering or calculation. Displaying a Unix timestamp as a date is a conversion: when remainingText is to date, select to date, not done. Select done when no operations remain.' +
             (input.type === 'numeric' || input.type === 'implicit_one'
               ? ' A target unit ("in feet" or "to kilograms") starts a separate conversion. For "16 feet plus 100 yards in feet", select "plus 100 yards", then "in feet". Never include the target-unit conversion in an addition or subtraction section. This applies to requested output units, not relative-time amounts such as "in 3 days".'
               : ''),
@@ -209,8 +213,48 @@ export class Engine {
     ) {
       throw new Error('Jev returned an invalid section.');
     }
+    let section = answer.choice === 'done' ? null : answer.choice;
+    let operation: Operation | undefined;
+    const selections = [
+      choiceSelection('Operation phrase', answer, {
+        ...candidates,
+        done: 'No operations remain',
+      }),
+    ];
     if (!assessChoice(answer.choice, answer.probabilities).accepted) {
-      throw new Error('The next operation phrase is unclear.');
+      for (const probability of Object.values(answer.probabilities)) {
+        if (!Number.isFinite(probability) || probability < 0 || probability > 1)
+          throw new Error('Jev returned invalid phrase probabilities.');
+      }
+      const choices = Object.keys(answer.probabilities).sort(
+        (a, b) => answer.probabilities[b] - answer.probabilities[a],
+      );
+      const pair = choices.slice(0, 2);
+      // The pair must dominate the remaining possibilities. Neither "done" nor
+      // an option outside our offered spans can be resolved as an operation.
+      if (
+        pair.length !== 2 ||
+        pair.some((choice) => !Object.hasOwn(sections, choice))
+      )
+        throw new Error('The next operation phrase is unclear.');
+      const grouped = { ...answer.probabilities };
+      grouped[pair[0]] += grouped[pair[1]];
+      delete grouped[pair[1]];
+      if (!assessChoice(pair[0], grouped).accepted)
+        throw new Error('The next operation phrase is unclear.');
+      const parser = new Jev(this.jev);
+      const resolved = await new OperationParser(
+        parser,
+        new QuantityParser(parser),
+      ).equivalentPhrases(pair, request);
+      section = resolved.section;
+      operation = resolved.operation;
+      selections.push({
+        label: 'Equivalent phrases',
+        value: pair.join(' / '),
+        source:
+          'Both phrases independently produced the same operation, amount, and unit; the longer phrase was consumed.',
+      });
     }
     // Counts are advisory. Only the selected phrase determines completion.
     let remaining: NextSection['remaining'] = null;
@@ -222,13 +266,9 @@ export class Engine {
       remaining = operationCounts[count.choice as keyof typeof operationCounts];
     }
     return {
-      selections: [
-        choiceSelection('Operation phrase', answer, {
-          ...candidates,
-          done: 'No operations remain',
-        }),
-      ],
-      section: answer.choice === 'done' ? null : answer.choice,
+      selections,
+      section,
+      operation,
       remaining,
     };
   }

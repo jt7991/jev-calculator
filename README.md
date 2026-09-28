@@ -47,7 +47,7 @@ Start with `core/calculator.ts`. Its `plan` method builds an expression, then `E
 - `choice.ts`: provisional acceptance policy (at least 50% probability and a 20-point lead).
 - `service.ts`, `types.ts`: validate requests and return the same success/error contract to every frontend.
 
-Operation extraction goes left to right. Execution order is a separate Jev decision because calendar months and years are order-sensitive. No reply sessions or clarification forms: missing/uncertain information returns an error for the user to edit.
+Operation extraction goes left to right. Execution order is a separate Jev decision because calendar months and years are order-sensitive. If two leading phrase candidates differ by one boundary word, both are parsed independently. We accept the longer phrase only when their combined probability passes the existing acceptance rule and both parses confidently agree on the operation, amount, and unit (or conversion target). Distinct operations and combined multi-amount phrases remain errors. The parsed operation is reused, and the original probabilities and both Jev calls remain available in the explanation. No reply sessions or clarification forms: missing/uncertain information returns an error for the user to edit.
 
 ## Behavior
 

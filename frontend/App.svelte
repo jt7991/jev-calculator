@@ -27,8 +27,10 @@
   let notice = $state('');
   const examples = [
     '6 feet in inches',
-    '2 hours in seconds',
-    'Add 3 days to today',
+    '1 cup in ml',
+    '16 feet plus 100 yards in feet',
+    '3 years and 3 days from now',
+    'Days until 3 months after January 29 2027',
   ];
 
   onMount(() => {

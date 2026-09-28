@@ -32,7 +32,7 @@ export class OperationParser {
         operation: {
           type: 'choice',
           instructions:
-            'Which operation does phrase represent in request: addition, subtraction, or conversion? Conversion changes the output unit or format: in ms, in inches, and to date are convert, including now in ms and Unix seconds to date. For adjustments, use request to resolve shared relationship words: amounts joined by and share from now/after (add) or ago/before (subtract). Thus 3 years in 3 years and 3 days from now is add; 2 hours in 2 hours and 30 minutes ago is subtract. An explicit relationship on phrase overrides a shared one.',
+            'Classify ONLY the selected phrase as addition, subtraction, or conversion. Explicit relationship words in phrase take priority: ago/before/minus mean subtract; after/plus/add mean add. Ignore conflicting words in other operations in request. Only consult request when phrase has NO relationship of its own, to inherit a relationship shared by coordinated amounts. Conversion changes the output unit or format: in ms, in inches, and to date are convert, including now in ms and Unix seconds to date. For adjustments, use request to resolve shared relationship words: amounts joined by and share from now/after (add) or ago/before (subtract). Thus 3 years in 3 years and 3 days from now is add; 2 hours in 2 hours and 30 minutes ago is subtract. A bare amount is not unsupported when its coordinated list supplies the relationship. For 1 month and 2 days before next Tuesday, the phrase 1 month inherits before and means subtract. An explicit relationship on phrase overrides a shared one.',
           criteria: kinds,
         },
       },
@@ -61,6 +61,37 @@ export class OperationParser {
     // The amount parser sees only this adjustment, never other operations.
     const amount = await this.quantities.parse(phrase, phrase);
     return { type: type as 'add' | 'subtract', amount, selections };
+  }
+
+  async equivalentPhrases(phrases: string[], request: string) {
+    const [first, second] = phrases;
+    const longer = first.length >= second.length ? first : second;
+    const shorter = longer === first ? second : first;
+    // Only resolve a small boundary difference, not two separate operations or
+    // a phrase containing several amounts. Prefer the longer span so a trailing
+    // relationship word is consumed along with its amount.
+    if (
+      longer.split(/\s+/).length - shorter.split(/\s+/).length !== 1 ||
+      !` ${longer} `.includes(` ${shorter} `)
+    )
+      throw new Error('The next operation phrase is unclear.');
+    const parsed = await Promise.all(
+      phrases.map((phrase) => this.parse(phrase, request)),
+    );
+    const [a, b] = parsed;
+    const same =
+      a.type === b.type &&
+      (a.type === 'convert' && b.type === 'convert'
+        ? a.unit === b.unit
+        : a.type !== 'convert' &&
+          b.type !== 'convert' &&
+          a.amount.unit === b.amount.unit &&
+          a.amount.amount.eq(b.amount.amount));
+    if (!same)
+      throw new Error(
+        'The candidate operation phrases disagree. Be more specific.',
+      );
+    return { section: longer, operation: parsed[phrases.indexOf(longer)] };
   }
 
   async executionOrder(phrases: string[], request: string): Promise<string[]> {

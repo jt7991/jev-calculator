@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { runCalculation } from '../core/service.js';
 import { TypeSafeClient } from '@typesafe-ai/sdk';
 const cases = [
+  ['45 minutes after 2 hours ago', 'Sep 26, 2026 \u00b7 19:00:45.123', 'UTC'],
   ['16 feet plus 100 yards in feet', '316', 'ft'],
   ['5 feet minus 6 inches in inches', '54', 'in'],
   ['2 kilograms plus 500 grams to grams', '2500', 'g'],
