@@ -98,3 +98,26 @@ npm run test:browser         # requires a running server; set PLAYWRIGHT_BASE_UR
 Live evals require the configured key and save reports under `evals/results`. Old tests for the replaced parser are archived in `.local/legacy-tests`; the active suite tests the new expression evaluator, request contract, date rules, and choice acceptance.
 
 Luna comparison is opt-in at `/?compare=luna`. The default page shows only Jev and makes no Luna requests.
+
+## Deploy with Coolify
+
+Use the repository's [Dockerfile build pack](https://coolify.io/docs/applications/builds/dockerfile):
+
+- Repository: `https://github.com/jt7991/jev-calculator`, branch `main`.
+- Base directory: `/`; Dockerfile location: `/Dockerfile`.
+- Ports Exposes: `3000`. The container listens on `0.0.0.0`.
+- Set `TYPESAFE_API_KEY` as a **runtime-only** environment variable in Coolify.
+- Optionally set `TYPESAFE_MODEL` (defaults to `jev-1.13.0`).
+- Set `OPENAI_API_KEY` at runtime only if you want the `/?compare=luna` comparison.
+- Assign your domain and deploy. No persistent volume is needed; recent calculations stay in browser storage.
+
+No API keys are needed during the build. `.dockerignore` excludes all `.env` files, local artifacts, and dependencies. The final image runs as a non-root user and contains only Node.js and the built application. Its health check requests `/` without making paid API calls.
+
+To run with Docker locally:
+
+```sh
+docker build -t jev-calculator .
+docker run --rm -p 3000:3000 --env-file .env jev-calculator
+```
+
+The env file in this command is read at container startup; it is not copied into the image.
