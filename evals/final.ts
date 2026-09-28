@@ -2,6 +2,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { runCalculation } from '../core/service.js';
 import { TypeSafeClient } from '@typesafe-ai/sdk';
 const cases = [
+  ['16 feet plus 100 yards in feet', '316', 'ft'],
+  ['5 feet minus 6 inches in inches', '54', 'in'],
+  ['2 kilograms plus 500 grams to grams', '2500', 'g'],
+  ['in 3 days', 'Sep 29, 2026 \u00b7 20:15:45.123', 'UTC'],
   ['25 cups plus 45 mililiters', '25.1902038776978668590735279436', 'US cup'],
   ['25 cups plus 45 milliliters', '25.1902038776978668590735279436', 'US cup'],
   ['5 feet minus 6 inches', '4.5', 'ft'],

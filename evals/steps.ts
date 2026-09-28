@@ -10,6 +10,34 @@ export type StepCase = {
 
 export const cases: StepCase[] = [
   {
+    id: 'addition-conversion',
+    text: '16 feet plus 100 yards in feet',
+    inputType: 'numeric',
+    inputText: '16 feet',
+    sections: ['plus 100 yards', 'in feet'],
+  },
+  {
+    id: 'subtraction-conversion',
+    text: '5 feet minus 6 inches in inches',
+    inputType: 'numeric',
+    inputText: '5 feet',
+    sections: ['minus 6 inches', 'in inches'],
+  },
+  {
+    id: 'mass-conversion',
+    text: '2 kilograms plus 500 grams to grams',
+    inputType: 'numeric',
+    inputText: '2 kilograms',
+    sections: ['plus 500 grams', 'to grams'],
+  },
+  {
+    id: 'relative-in-days',
+    text: 'in 3 days',
+    inputType: 'now',
+    inputText: null,
+    sections: ['in 3 days'],
+  },
+  {
     id: 'nested-years',
     text: '3 days after 15 years ago',
     inputType: 'now',
