@@ -90,7 +90,7 @@ export class WorkBuilder {
       !selections.some((item) => item.label === 'Operation')
     )
       selections.push({ label: 'Operation', value: expression.type });
-    if (expression.type === 'add' || expression.type === 'subtract')
+    if ('amount' in expression)
       selections.push(...(expression.amount.selections ?? []));
     if (
       (expression.type === 'convert' || expression.type === 'difference') &&
@@ -163,10 +163,24 @@ export class WorkBuilder {
           calculation: '',
           children: [],
         });
-        label = `${expression.type === 'add' ? 'Add' : 'Subtract'} ${this.text(amount)}`;
-        calculation = `${this.text(input.result)} ${expression.type === 'add' ? '+' : '\u2212'} ${this.text(amount)}`;
+        const operationLabels = {
+          add: 'Add',
+          subtract: 'Subtract',
+          multiply: 'Multiply by',
+          divide: 'Divide by',
+        };
+        const operationSymbols = {
+          add: '+',
+          subtract: '\u2212',
+          multiply: '\u00d7',
+          divide: '\u00f7',
+        };
+        label = `${operationLabels[expression.type]} ${this.text(amount)}`;
+        calculation = `${this.text(input.result)} ${operationSymbols[expression.type]} ${this.text(amount)}`;
         const before = this.evaluator.evaluate(expression.input);
-        if (before.type === 'date')
+        if (expression.type === 'multiply' || expression.type === 'divide')
+          note = 'Combine quantities using their dimensions and unit scales.';
+        else if (before.type === 'date')
           note = ['month', 'year'].includes(expression.amount.unit)
             ? 'Calendar arithmetic; clamps to the last valid day when necessary.'
             : 'Elapsed time; one day is exactly 24 hours.';

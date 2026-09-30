@@ -4,7 +4,7 @@ import { Jev } from './jev.js';
 import { QuantityParser, type Quantity } from './quantity.js';
 import { unitChoices } from './units.js';
 export type Operation = (
-  | { type: 'add' | 'subtract'; amount: Quantity }
+  | { type: 'add' | 'subtract' | 'multiply' | 'divide'; amount: Quantity }
   | { type: 'convert'; unit: string }
 ) & { selections?: Selection[] };
 
@@ -18,6 +18,9 @@ export class OperationParser {
     const kinds = {
       add: 'Add an amount: after, more than, plus, from now, add',
       subtract: 'Subtract an amount: before, ago, less than, minus, subtract',
+      multiply:
+        'Multiply by a quantity, including a constant rate sustained for a duration',
+      divide: 'Divide by a quantity to find a rate or ratio',
       convert:
         'Convert to an output unit or display a timestamp as a readable date',
       unsupported: 'Not one supported operation',
@@ -32,7 +35,7 @@ export class OperationParser {
         operation: {
           type: 'choice',
           instructions:
-            'Classify ONLY the selected phrase as addition, subtraction, or conversion. Explicit relationship words in phrase take priority: ago/before/minus mean subtract; after/plus/add mean add. Ignore conflicting words in other operations in request. Only consult request when phrase has NO relationship of its own, to inherit a relationship shared by coordinated amounts. Conversion changes the output unit or format: in ms, in inches, and to date are convert, including now in ms and Unix seconds to date. For adjustments, use request to resolve shared relationship words: amounts joined by and share from now/after (add) or ago/before (subtract). Thus 3 years in 3 years and 3 days from now is add; 2 hours in 2 hours and 30 minutes ago is subtract. A bare amount is not unsupported when its coordinated list supplies the relationship. For 1 month and 2 days before next Tuesday, the phrase 1 month inherits before and means subtract. An explicit relationship on phrase overrides a shared one.',
+            'Classify the selected phrase as addition, subtraction, multiplication, division, or conversion using its relationship to the starting quantity in request. A constant current, speed, or power sustained for/over a duration means multiply by that duration. For 3 amps over 5 minutes to mAh, over 5 minutes means multiply. A total amount spread over a duration to find a rate means divide: 20 miles over 2 hours to mph. Explicit times/multiplied by mean multiply; divided by means divide. Do not map over to division without interpreting the whole request. Explicit relationship words in phrase take priority: ago/before/minus mean subtract; after/plus/add mean add. Ignore conflicting words in other operations in request. Only consult request when phrase has NO relationship of its own, to inherit a relationship shared by coordinated amounts. A phrase naming the requested OUTPUT unit in a "how many OUTPUT units are in SOURCE quantity" question is a conversion, even without in/to in the selected phrase and even when the units are incompatible. Conversion changes the output unit or format: in ms, in inches, and to date are convert, including now in ms and Unix seconds to date. For adjustments, use request to resolve shared relationship words: amounts joined by and share from now/after (add) or ago/before (subtract). Thus 3 years in 3 years and 3 days from now is add; 2 hours in 2 hours and 30 minutes ago is subtract. A bare amount is not unsupported when its coordinated list supplies the relationship. For 1 month and 2 days before next Tuesday, the phrase 1 month inherits before and means subtract. An explicit relationship on phrase overrides a shared one.',
           criteria: kinds,
         },
       },
@@ -60,7 +63,11 @@ export class OperationParser {
     }
     // The amount parser sees only this adjustment, never other operations.
     const amount = await this.quantities.parse(phrase, phrase);
-    return { type: type as 'add' | 'subtract', amount, selections };
+    return {
+      type: type as 'add' | 'subtract' | 'multiply' | 'divide',
+      amount,
+      selections,
+    };
   }
 
   async equivalentPhrases(phrases: string[], request: string) {

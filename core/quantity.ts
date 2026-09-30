@@ -16,11 +16,24 @@ export class QuantityParser {
   constructor(private readonly jev: Jev) {}
 
   amountChoices(text: string) {
-    return {
+    // Numeric spans are candidates only: Jev still selects their role and unit.
+    // Preserve signs, decimals, and exponents verbatim in compact inputs (3kg).
+    const numbers = Object.fromEntries(
+      [
+        ...text.matchAll(
+          /(?<![\p{L}\p{N}_.])[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/gu,
+        ),
+      ].map(([number]) => [number, null]),
+    );
+    const choices = {
       ...wordSections(text),
+      ...numbers,
       implicit_one: 'An implied quantity of one, as in a mile or an hour',
       unsupported: 'No amount is supplied',
     };
+    if (Object.keys(choices).length > 255)
+      throw new Error('Use a shorter quantity expression.');
+    return choices;
   }
 
   number(text: string): Decimal {
@@ -48,7 +61,7 @@ export class QuantityParser {
         amount: {
           type: 'choice',
           instructions:
-            'Which exact phrase is ONLY the starting numeric amount in input? Exclude units and operations. For one cup select one. For a cup select implicit_one. Preserve digits exactly.',
+            'Which exact phrase is ONLY the numeric amount of the quantity in input? Input may be a starting quantity OR an isolated operation operand. Exclude units and relationship words such as minus, plus, times, divided by, over, and for. For minus 6 inches select 6, not minus 6; subtraction is handled separately. For divided by 5 minutes select 5; for times 3 meters select 3. Keep a written numeric sign attached to digits, as in -2.5kg. For one cup select one. For a cup select implicit_one. Numbers may touch units: for 3kg select 3, for -2.5kg select -2.5, for 1e3mA select 1e3. Preserve digits exactly.',
           criteria: amounts,
         },
         unit: {

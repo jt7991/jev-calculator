@@ -29,7 +29,7 @@
     '6 feet in inches',
     '1 cup in ml',
     '16 feet plus 100 yards in feet',
-    '6 pounds plus 3 kilograms in grams',
+    '6 pounds plus 3 kilograms plus 18 stone in grams',
     '3 years and 3 days from now',
     'Days until 3 months after January 29 2027',
   ];

@@ -96,3 +96,52 @@ test('resolves split phrase probability only after both operations agree, retain
   expect(next.selections?.[0].probability).toBe(0.49);
   expect(next.selections?.[1].label).toBe('Equivalent phrases');
 });
+
+test.each(['1', '2+'])(
+  'rejects completion when a confident count says %s operations remain',
+  async (remaining) => {
+    const localClient = {
+      systemOne: vi.fn().mockResolvedValue({
+        answers: {
+          section: {
+            type: 'choice',
+            choice: 'done',
+            probabilities: {
+              done: 0.5,
+              'How many liters are in': 0.28,
+              liters: 0.22,
+            },
+          },
+          remaining: {
+            type: 'choice',
+            choice: remaining,
+            probabilities: { '0': 0.08, [remaining]: 0.92 },
+          },
+        },
+      }),
+    } as unknown as JevClient;
+    await expect(
+      new Engine(localClient).nextSection('How many liters are in a foot', {
+        type: 'implicit_one',
+        text: 'a foot',
+      }),
+    ).rejects.toThrow('remaining operation is unclear');
+  },
+);
+
+test('allows completion when both phrase and count say no operations remain', async () => {
+  const localClient = {
+    systemOne: vi.fn().mockResolvedValue({
+      answers: {
+        section: { type: 'choice', choice: 'done', probabilities: { done: 1 } },
+        remaining: { type: 'choice', choice: '0', probabilities: { '0': 1 } },
+      },
+    }),
+  } as unknown as JevClient;
+  const next = await new Engine(localClient).nextSection(
+    'How many inches are in a foot',
+    { type: 'implicit_one', text: 'a foot' },
+    ['How many inches'],
+  );
+  expect(next.section).toBeNull();
+});

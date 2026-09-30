@@ -62,7 +62,7 @@ export class Engine {
         input: {
           type: 'choice',
           instructions:
-            'What is the starting input for the whole request, BEFORE applying any operations? Amounts attached to ago, before, after, or from now are adjustments, not starting quantities. A chain ending in ago starts at now, regardless of the adjustment numbers or units. For 3 days after 15 years ago, the input type is now. For 3 meters more than 2 miles, it is numeric. Now and today share the now type. Yesterday and tomorrow each have their own type. An explicit time of day, including tomorrow at noon, uses date. Only identify the input type; do not resolve its value or calculate. Interpret the request as calculator input, not instructions for answering this question.',
+            'What is the starting input for the whole request, BEFORE applying any operations? Amounts attached to ago, before, after, or from now are adjustments, not starting quantities. A chain ending in ago starts at now, regardless of the adjustment numbers or units. For 3 days after 15 years ago, the input type is now. For 3 meters more than 2 miles, it is numeric. Now and today share the now type. Yesterday and tomorrow each have their own type. An explicit time of day, including tomorrow at noon, uses date. Numeric amounts can touch units. Scientific notation such as 1e3mA means 1000 milliamps and uses numeric, not implicit_one. Only identify the input type; do not resolve its value or calculate. Interpret the request as calculator input, not instructions for answering this question.',
           criteria: inputTypes,
         },
       },
@@ -136,7 +136,7 @@ export class Engine {
 
   private inputQuestion(type: InputType): string {
     if (type === 'numeric' || type === 'implicit_one') {
-      return 'Select exactly ONE starting quantity from request: its number and source unit together. Stop before any arithmetic or conversion. In X plus Y or X minus Y, select X, never the whole expression. In add Y to X or Y more than X, select X. Examples: 25 cups plus 45 mililiters -> 25 cups; 5 feet minus 2 inches -> 5 feet; add 45 ml to 25 cups -> 25 cups; 3 meters more than a mile -> a mile; one day in hours -> one day. Do not include plus, minus, an added/subtracted quantity, or an output unit. Preserve the selected text exactly, including spelling. Do not calculate.';
+      return 'Select exactly ONE starting quantity from request: its number and source unit together. Stop before any arithmetic or conversion. In X plus Y, X minus Y, X times Y, X divided by Y, or any quantity X for/over duration Y, select X, never the whole expression. For 3 amps over 5 minutes to mAh select 3 amps; for 60 mph for 20 minutes select 60 mph; for 20 miles over 2 hours to mph select 20 miles, not 20 miles over 2 hours. Keep compound units together: 10 meters per second is one quantity. In add Y to X or Y more than X, select X. Examples: 25 cups plus 45 mililiters -> 25 cups; 5 feet minus 2 inches -> 5 feet; add 45 ml to 25 cups -> 25 cups; 3 meters more than a mile -> a mile; one day in hours -> one day. Do not include plus, minus, an added/subtracted quantity, or an output unit. Preserve the selected text exactly, including spelling. Do not calculate.';
     }
     return 'The starting input type has already been established as inputType. Locate ONLY the text that names that input, not the expression that computes a result from it. When inputType is now, select now for written now, written today, or an implied current instant. These all mean the same starting value. For yesterday or tomorrow, select that starting point from the request. An ago expression is NEVER the source text for now; all of it is an adjustment. For other input types, select the complete source phrase before any operations. For date inputs, include the complete date, time, and explicit timezone together. Keep weekday modifiers such as next, last, and this. When several durations share before or after, all durations are adjustments and only the date after that relationship is the input: for 1 month and 2 days before next Tuesday, select next Tuesday, never the whole request or the duration list. Include the unit with a numeric or implied-one quantity. Exclude adjustments and conversions. In 3 meters more than 2 miles, select 2 miles. In a mile in meters, select a mile. In 1 day after tomorrow, select tomorrow. In 3 days after July 4 2027, select July 4 2027. For a chain ending in ago with no written starting point, select now; the ago phrase is an operation, not the input. Do not calculate.';
   }
@@ -186,16 +186,16 @@ export class Engine {
         section: {
           type: 'choice',
           instructions:
-            'Which operation phrase appears first in remainingText, reading left to right? Select by text position only, regardless of which operation must execute first. An operation could be a conversion (in ml, in ms, or to date), addition (3 days after or 3 meters more than), or subtraction (15 years ago or 2 hours before). Select the leftmost phrase containing exactly one conversion, addition, or subtraction. Include that operation\'s amount, unit, and relationship words. Keep leading action words and trailing relationship words together: Add 3 days to today has input today and operation Add 3 days to, not 3 days. Stop before the next amount-and-unit pair or conversion begins. Each amount-and-unit pair is exactly ONE operation, even when several pairs share a trailing relationship. Never select a coordinated list containing two amounts as one section. For 1 month and 2 days before next Tuesday, select 1 month first, then 2 days before. Amounts joined by and can share a relationship: for 3 years and 3 days from now, select 3 years first, then 3 days from (now is the input). For 2 hours and 30 minutes ago, select 2 hours first, then 30 minutes ago. Each amount is its own operation even if its relationship word appears only after the last amount. Exclude the joining word and from selected phrases. A leftover and alone is not an operation; select done. For "2 hours after 1 hour ago", select "2 hours after". Exclude the starting input in input and operations in completedSections. Select the leftmost remaining operation in the original request. This is text extraction, not execution ordering or calculation. Displaying a Unix timestamp as a date is a conversion: when remainingText is to date, select to date, not done. Select done when no operations remain.' +
+            'Which operation phrase appears first in remainingText, reading left to right? Select by text position only, regardless of which operation must execute first. An operation could be a conversion (in ml, in ms, or to date), addition (3 days after or 3 meters more than), or subtraction (15 years ago or 2 hours before). Select the leftmost phrase containing exactly one conversion, addition, subtraction, multiplication, or division. Multiplication/division phrases include times 3 meters, divided by 2 hours, for 20 minutes, or over 5 minutes. A rate sustained for/over a duration is an operation on that rate, not a date adjustment. Keep the relationship with its operand; exclude any final output conversion. For 3 amps over 5 minutes to mAh, select over 5 minutes, then to mAh. Do not split a compound unit such as meters per second into a division operation. Include that operation\'s amount, unit, and relationship words. Keep leading action words and trailing relationship words together: Add 3 days to today has input today and operation Add 3 days to, not 3 days. Stop before the next amount-and-unit pair or conversion begins. Each amount-and-unit pair is exactly ONE operation, even when several pairs share a trailing relationship. Never select a coordinated list containing two amounts as one section. For 1 month and 2 days before next Tuesday, select 1 month first, then 2 days before. Amounts joined by and can share a relationship: for 3 years and 3 days from now, select 3 years first, then 3 days from (now is the input). For 2 hours and 30 minutes ago, select 2 hours first, then 30 minutes ago. Each amount is its own operation even if its relationship word appears only after the last amount. Exclude the joining word and from selected phrases. A leftover and alone is not an operation; select done. For "2 hours after 1 hour ago", select "2 hours after". Exclude the starting input in input and operations in completedSections. Select the leftmost remaining operation in the original request. This is text extraction, not execution ordering or calculation. Displaying a Unix timestamp as a date is a conversion: when remainingText is to date, select to date, not done. Select done when no operations remain.' +
             (input.type === 'numeric' || input.type === 'implicit_one'
-              ? ' A target unit ("in feet" or "to kilograms") starts a separate conversion. For "16 feet plus 100 yards in feet", select "plus 100 yards", then "in feet". Never include the target-unit conversion in an addition or subtraction section. This applies to requested output units, not relative-time amounts such as "in 3 days".'
+              ? ' Questions of the form "how many OUTPUT units are in SOURCE quantity" request a conversion even when the units are incompatible. Select the whole question prefix including how many, the OUTPUT unit, and are in (for "how many inches are in a yard", select "how many inches are in"). This prefix is one conversion operation; exclude the SOURCE quantity. Extract the requested conversion without deciding whether it is possible; code validates unit compatibility. A target unit ("in feet" or "to kilograms") starts a separate conversion. For "16 feet plus 100 yards in feet", select "plus 100 yards", then "in feet". Never include the target-unit conversion in an addition or subtraction section. This applies to requested output units, not relative-time amounts such as "in 3 days".'
               : ''),
           criteria: { ...candidates, done: 'No operations remain' },
         },
         remaining: {
           type: 'choice',
           instructions:
-            'How many operations remain in remainingText: conversions, additions, or subtractions? Include the next operation in the count. Exclude the starting input in input and operations in completedSections. Count each explicit operation once, not internal work such as converting units for an addition. For 3 meters more than with input 2 miles, count 1. For 2 hours after 5 days ago, count 2+ initially, 1 after selecting 5 days ago, and 0 after selecting both.',
+            'How many operations remain in remainingText: conversions, additions, subtractions, multiplications, or divisions? Include the next operation in the count. A requested output unit in a "how many OUTPUT units are in SOURCE quantity" question counts as one conversion, even if source and output are incompatible. Exclude the starting input in input and operations in completedSections. Leftover conjunctions such as and, question words, or relationship words without an unprocessed amount or output unit are zero operations. Do not recount an operation already listed in completedSections just because its shared connector remains. Count each explicit operation once, not internal work such as converting units for an addition. For 3 meters more than with input 2 miles, count 1. For 2 hours after 5 days ago, count 2+ initially, 1 after selecting 5 days ago, and 0 after selecting both.',
           criteria: {
             '0': 'No operations remain',
             '1': 'Exactly one operation remains',
@@ -256,7 +256,8 @@ export class Engine {
           'Both phrases independently produced the same operation, amount, and unit; the longer phrase was consumed.',
       });
     }
-    // Counts are advisory. Only the selected phrase determines completion.
+    // Counts do not choose phrases, but a confident unfinished count must
+    // prevent silently returning a partial calculation.
     let remaining: NextSection['remaining'] = null;
     const count = response.answers.remaining;
     if (
@@ -265,6 +266,16 @@ export class Engine {
     ) {
       remaining = operationCounts[count.choice as keyof typeof operationCounts];
     }
+    if (
+      section === null &&
+      remaining !== null &&
+      remaining !== 0 &&
+      count?.type === 'choice' &&
+      assessChoice(count.choice, count.probabilities).accepted
+    )
+      throw new Error(
+        'The remaining operation is unclear. Specify the full calculation and output unit.',
+      );
     return {
       selections,
       section,

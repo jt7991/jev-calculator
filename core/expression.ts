@@ -1,3 +1,4 @@
+import { combineQuantities } from './dimensions.js';
 import { Decimal } from 'decimal.js';
 import { DateInput, dateAt, type DateParts } from './date-input.js';
 import { convertDecimal, durationEstimate, units } from './units.js';
@@ -9,7 +10,11 @@ export type Value = (
 ) & { approximate?: boolean; note?: string };
 export type Expression = (
   | { type: 'literal'; value: Value }
-  | { type: 'add' | 'subtract'; input: Expression; amount: Quantity }
+  | {
+      type: 'add' | 'subtract' | 'multiply' | 'divide';
+      input: Expression;
+      amount: Quantity;
+    }
   | { type: 'convert'; input: Expression; unit: string }
   | { type: 'difference'; start: Expression; end: Expression; unit: string }
 ) & { source?: string; note?: string; selections?: Selection[] };
@@ -38,6 +43,13 @@ export class ExpressionEvaluator {
     const value = this.evaluate(expression.input);
     if (expression.type === 'convert')
       return this.convert(value, expression.unit);
+    if (expression.type === 'multiply' || expression.type === 'divide') {
+      if (value.type !== 'quantity')
+        throw new Error(
+          'Multiplication and division require quantities, not dates.',
+        );
+      return combineQuantities(value, expression.amount, expression.type);
+    }
     const sign = expression.type === 'add' ? 1 : -1;
     if (value.type === 'date')
       return this.shiftDate(value, expression.amount, sign);

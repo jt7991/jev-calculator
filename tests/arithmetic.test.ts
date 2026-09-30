@@ -132,3 +132,15 @@ test('show-work values and tree reflect actual execution', () => {
   expect(work.steps[0].source).toBe('January 30 2027');
   expect(work.steps.every((step) => step.children.length === 0)).toBe(true);
 });
+
+test.each([
+  ['3kg', '3'],
+  ['-2.5kg', '-2.5'],
+  ['.5h', '.5'],
+  ['1e3mA', '1e3'],
+  ['2.5e-3A', '2.5e-3'],
+  ['9007199254740993B', '9007199254740993'],
+])('exposes exact numeric candidates in %s', (input, number) => {
+  expect(Object.hasOwn(quantities.amountChoices(input), number)).toBe(true);
+  expect(quantities.number(number).eq(number)).toBe(true);
+});

@@ -39,11 +39,12 @@ Start with `core/calculator.ts`. Its `plan` method builds an expression, then `E
 - `phrases.ts`: offer all contiguous word sections as choices; no unit-token parser.
 - `quantity.ts`: Jev selects the number and unit. Decimal preserves digit strings; the word-number package handles selected whole-number words.
 - `operations.ts`: interpret each operation and choose execution order separately from extraction order.
-- `expression.ts`: the shared expression tree and deterministic evaluator. Dates and quantities both use literal, add, subtract, convert, and difference nodes.
+- `expression.ts`: the shared expression tree and deterministic evaluator. Dates and quantities use literal, add, subtract, convert, and difference nodes; quantities also support multiply and divide.
 - `work.ts`: builds the intermediate results shown under “How this was calculated”. Each step expands into its parsing selections; `selections.ts` preserves the original Jev options, probabilities, and confidence for further inspection without extra model calls.
 - `trace.ts`: captures each call's model, state, questions, answers, and duration. Fields link to their call, and “All Jev calls” includes routing, ordering, and completion checks. SDK configuration and authentication headers are never included.
 - `date-questions.ts`, `date-input.ts`: date extraction adapted from the TypeSafe date cookbook, with time/timezone choices and Day.js validation.
 - `units.ts`: conversion factors and temperature formulas.
+- `dimensions.ts`: dimension checks and coherent unit scales for multiplying/dividing quantities.
 - `choice.ts`: provisional acceptance policy (at least 50% probability and a 20-point lead).
 - `service.ts`, `types.ts`: validate requests and return the same success/error contract to every frontend.
 
@@ -53,8 +54,10 @@ Operation extraction goes left to right. Execution order is a separate Jev decis
 
 Supports 232 units across length, mass, temperature, volume, data sizes, duration, area, speed, energy, power, pressure, frequency, force, voltage, current, resistance, charge, capacitance, and inductance. Unix seconds/milliseconds, date adjustments, and date differences share the same calculator. The largest unit Choice has 234 options including unsupported and readable-date output, below Jev's 255-option limit.
 
-SI prefixes follow [BIPM](https://www.bipm.org/en/measurement-units/si-prefixes); customary conversion definitions follow [NIST SP 811](https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8). Binary and decimal data prefixes remain distinct. Pressure, power, energy, and electrical quantities are separate dimensions; the calculator does not infer physical formulas between them.
+SI prefixes follow [BIPM](https://www.bipm.org/en/measurement-units/si-prefixes); customary conversion definitions follow [NIST SP 811](https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8). Binary and decimal data prefixes remain distinct. Multiplication/division combines dimensions deterministically: current times duration produces charge, speed times duration produces distance, and power times duration produces energy. Jev interprets the requested relationship; code validates the dimensions and calculates. Unsupported resulting dimensions, offset-temperature products, and division by zero return errors.
 
+- Compact quantities such as `3kg`, `500mA`, and `5min` preserve their exact numeric values.
+- Constant-rate examples: `3 amps over 5 minutes to mAh` = 250 mAh; `60 mph for 20 minutes to miles` = 20 miles; `100 watts for 3 hours to Wh` = 300 Wh.
 - Generic years use 365.2425 days; months use one twelfth of a year. Results crossing these units are marked approximate.
 - A generic day is 24 hours. Calendar months and years use Day.js and require whole amounts.
 - Now and today share the reference instant. Yesterday/tomorrow preserve the current local clock time on the adjacent calendar day.
