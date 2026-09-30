@@ -10,6 +10,20 @@ export type StepCase = {
 
 export const cases: StepCase[] = [
   {
+    id: 'duration-at-speed',
+    text: '30 minutes at 3 mph in miles',
+    inputType: 'numeric',
+    inputText: '30 minutes',
+    sections: ['at 3 mph', 'in miles'],
+  },
+  {
+    id: 'duration-at-current',
+    text: '5 minutes at 3 amps to mAh',
+    inputType: 'numeric',
+    inputText: '5 minutes',
+    sections: ['at 3 amps', 'to mAh'],
+  },
+  {
     id: 'addition-conversion',
     text: '16 feet plus 100 yards in feet',
     inputType: 'numeric',

@@ -2,6 +2,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { runCalculation } from '../core/service.js';
 import { TypeSafeClient } from '@typesafe-ai/sdk';
 const cases = [
+  ['30 minutes at 3 mph in miles', '1.5', 'mi'],
+  ['30min at 3mph in miles', '1.5', 'mi'],
+  ['5 minutes at 3 amps to mAh', '250', 'mAh'],
+  ['3 hours at 100 watts to Wh', '300', 'Wh'],
   ['6 pounds plus 3 kilograms plus 18 stone in grams', '120026.83146', 'g'],
   ['3 amps over 5 minutes to mAh', '250', 'mAh'],
   ['3A over 5min to mAh', '250', 'mAh'],

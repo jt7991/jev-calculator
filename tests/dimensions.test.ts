@@ -20,6 +20,7 @@ test.each([
   ['3', 'ampere', '5', 'minute', 'milliampere_hour', '250'],
   ['500', 'milliampere', '30', 'minute', 'milliampere_hour', '250'],
   ['60', 'mile_per_hour', '20', 'minute', 'mile', '20'],
+  ['30', 'minute', '3', 'mile_per_hour', 'mile', '1.5'],
   ['100', 'watt', '3', 'hour', 'watt_hour', '300'],
   ['2', 'meter', '30', 'centimeter', 'square_meter', '0.6'],
   ['2', 'square_meter', '3', 'meter', 'liter', '6000'],
