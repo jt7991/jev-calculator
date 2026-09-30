@@ -356,7 +356,7 @@
           {#if result && !busy}
             <p
               class="response-time"
-              aria-label="Response time and estimated cost"
+              aria-label="Response time"
               title="Server processing time, including provider calls; excludes browser-to-server transfer and rendering"
             >
               {responseMs === null
@@ -364,17 +364,6 @@
                 : responseMs < 1000
                   ? `${responseMs} ms`
                   : `${(responseMs / 1000).toFixed(2)} s`}
-              <span aria-hidden="true"> · </span>
-              <span
-                class="query-cost"
-                title="Estimated Jev cost in USD from reported input tokens and published pricing; excludes any unreported retry usage"
-              >
-                {#if result.usage?.estimatedCostUsd != null}
-                  ~${result.usage.estimatedCostUsd.toFixed(6)} USD
-                {:else}
-                  Cost unavailable
-                {/if}
-              </span>
             </p>
           {/if}
         </div>

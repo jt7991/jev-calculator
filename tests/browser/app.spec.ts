@@ -182,7 +182,7 @@ test('real Nitro endpoint handles QUERY, POST, and malformed requests', async ({
   ).toBe(413);
 });
 
-test('real calculation renders the answer, response time, and cost', async ({
+test('real calculation renders the answer, response time', async ({
   page,
 }) => {
   await page.unroute('**/api/luna');
@@ -196,12 +196,11 @@ test('real calculation renders the answer, response time, and cost', async ({
     { timeout: 40000 },
   );
   await expect(
-    page.getByLabel('Response time and estimated cost', { exact: true }),
+    page.getByLabel('Response time', { exact: true }),
   ).toBeVisible();
-  await expect(page.locator('.query-cost')).toContainText(/~\$0\.\d{6} USD/);
   const luna = page.getByRole('region', { name: 'Luna result', exact: true });
   await expect(luna.locator('.response-time')).toContainText(
-    /~\$0\.\d{6} USD/,
+    /(?:ms|s)$/,
     { timeout: 40000 },
   );
   await expect(luna.locator('.luna-text')).not.toBeEmpty();
@@ -352,11 +351,11 @@ test('displays server timings instead of delayed browser round trips', async ({
   await page.getByRole('textbox').fill('1 cup in ml');
   await page.keyboard.press('Enter');
   await expect(
-    page.getByLabel('Response time and estimated cost', { exact: true }),
-  ).toContainText('12 ms');
+    page.getByLabel('Response time', { exact: true }),
+  ).toHaveText('12 ms');
   await expect(
-    page.getByLabel('Luna response time and estimated cost', { exact: true }),
-  ).toContainText('34 ms');
+    page.getByLabel('Luna response time', { exact: true }),
+  ).toHaveText('34 ms');
 });
 
 test('Luna is opt-in and sends no requests on the normal page', async ({

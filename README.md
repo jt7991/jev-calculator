@@ -17,7 +17,7 @@ npm start
 
 Node 22.12+ is required. The web app runs at localhost:5173 in development. The CLI can call an existing server with `--url http://localhost:5174`. The Tailscale proxy on this machine serves port 8082 and forwards to the production server on 127.0.0.1:5174.
 
-For the web comparison, also set `OPENAI_API_KEY` in the ignored `.env` file; both API keys stay server-side. Jev selects interpretations and uses deterministic Decimal.js/Day.js math. Luna answers directly with one `gpt-5.6-luna` call and reasoning set to `none`, so this compares two calculation approaches. Both receive the same request, timezone, and reference time. Each result has its own server processing time (including provider calls, excluding browser-to-server transfer and rendering) and estimated USD cost; Luna's estimate uses reported input, cached input, and output tokens at [standard model pricing](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
+For the web comparison, also set `OPENAI_API_KEY` in the ignored `.env` file; both API keys stay server-side. Jev selects interpretations and uses deterministic Decimal.js/Day.js math. Luna answers directly with one `gpt-5.6-luna` call and reasoning set to `none`, so this compares two calculation approaches. Both receive the same request, timezone, and reference time. Each result has its own server processing time (including provider calls, excluding browser-to-server transfer and rendering).
 
 ## Project layout
 

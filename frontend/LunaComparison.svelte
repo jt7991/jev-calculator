@@ -57,7 +57,7 @@
     </p>
     <p
       class="response-time"
-      aria-label="Luna response time and estimated cost"
+      aria-label="Luna response time"
       title="Server processing time, including provider calls; excludes browser-to-server transfer and rendering"
     >
       {milliseconds === null
@@ -65,14 +65,6 @@
         : milliseconds < 1000
           ? `${milliseconds} ms`
           : `${(milliseconds / 1000).toFixed(2)} s`}
-      <span aria-hidden="true"> · </span>
-      <span
-        title="Estimated USD cost using reported input, cached input, and output tokens at standard pricing"
-      >
-        {result.estimatedCostUsd != null
-          ? `~$${result.estimatedCostUsd.toFixed(6)} USD`
-          : 'Cost unavailable'}
-      </span>
     </p>
   {/if}
 </section>

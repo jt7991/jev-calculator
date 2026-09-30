@@ -52,7 +52,7 @@ Only the input uses a soft offset shadow: `0 6px 20px #00000018, 0 24px 70px #00
 The primary input is a generous rounded rectangle. Choice controls use restrained 8px radii. Icon buttons are circular.
 
 ## Components
-The Jev/Luna comparison uses two answer columns on desktop, stacked at 650px and below, with Jev's expandable interpretation spanning the workspace below. Both use the same request timezone and reference time. Each answer shows its own server processing time (including provider calls, excluding browser-to-server transfer and rendering) and estimated USD cost to six decimal places; missing usage displays "Cost unavailable". Jev cost sums reported usage; Luna uses one `gpt-5.6-luna` call with reasoning set to `none`.
+The Jev/Luna comparison uses two answer columns on desktop, stacked at 650px and below, with Jev's expandable interpretation spanning the workspace below. Both use the same request timezone and reference time. Each answer shows its own server processing time (including provider calls, excluding browser-to-server transfer and rendering). Cost is not displayed. Luna uses one `gpt-5.6-luna` call with reasoning set to `none`.
 The input submits on Enter, permits Shift+Enter, and focuses with /. It has no manual resize handle. The resting input has no slogan; loading shows a short calculation status. Each submission is independent; missing or ambiguous details show an error so the user can edit the full input. Results offer copy and expandable interpretation. History stays local. A footer editor changes the default timezone. Loading, error, empty, and success states are implemented.
 
 ## Do's and Don'ts
